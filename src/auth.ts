@@ -35,8 +35,8 @@ export default class AuthService<User extends BaseModel> extends BaseService {
     public userService: BaseService
     public path: string
 
-    constructor({store, userService}: AuthOptions<User>) {
-        super({store, name: "authentication"})
+    constructor(baseUrl: string, {store, userService}: AuthOptions<User>) {
+        super(baseUrl, {store, name: "authentication"})
         this.userService = userService
         this.path = "authentication/"
     }

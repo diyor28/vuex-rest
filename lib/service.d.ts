@@ -4,9 +4,8 @@ import { RegisterOptions } from "vuex-class-modules/lib/module-factory";
 import { BaseModel, FindResponse, Operation, Pk, Query } from "./rql";
 import { Store } from "vuex";
 export declare class BaseService extends VuexModule {
-    static baseUrl: string;
     protected axiosInstance: AxiosInstance;
-    constructor(options: RegisterOptions);
+    constructor(baseUrl: string, options: RegisterOptions);
 }
 export declare class Service<ModelType extends BaseModel> extends BaseService {
     results: ModelType[];
@@ -19,7 +18,7 @@ export declare class Service<ModelType extends BaseModel> extends BaseService {
     offset: number;
     limit: number;
     path: string;
-    constructor(store: Store<any>, path: string);
+    constructor(store: Store<any>, baseUrl: string, path: string);
     get getStore(): (id: Pk) => ModelType | undefined;
     get findStore(): (query?: Query<ModelType>) => FindResponse<ModelType>;
     setData(data: FindResponse<ModelType>): void;

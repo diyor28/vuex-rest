@@ -10,13 +10,12 @@ import urljoin from "url-join";
 import {getHeader, strip} from "./utils";
 
 export class BaseService extends VuexModule {
-    public static baseUrl: string
     protected axiosInstance: AxiosInstance
 
-    constructor(options: RegisterOptions) {
+    constructor(baseUrl: string, options: RegisterOptions) {
         super(options)
         this.axiosInstance = axios.create({
-            baseURL: BaseService.baseUrl,
+            baseURL: baseUrl,
             timeout: 60000,
             maxRedirects: 10,
             paramsSerializer: rql,
@@ -40,8 +39,8 @@ export class Service<ModelType extends BaseModel> extends BaseService {
     public limit: number = 0
     public path: string
 
-    constructor(store: Store<any>, path: string) {
-        super({store, name: strip(path, '/')})
+    constructor(store: Store<any>, baseUrl: string, path: string) {
+        super(baseUrl, {store, name: strip(path, '/')})
         this.path = strip(path, '/') + '/'
     }
 

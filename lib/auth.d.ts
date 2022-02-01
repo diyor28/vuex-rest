@@ -22,7 +22,7 @@ export default class AuthService<User extends BaseModel> extends BaseService {
     user: User | null;
     userService: BaseService;
     path: string;
-    constructor({ store, userService }: AuthOptions<User>);
+    constructor(baseUrl: string, { store, userService }: AuthOptions<User>);
     get isLoggedIn(): () => boolean;
     login({ email, password }: LoginCredentials): Promise<AuthTokens>;
     refresh(): Promise<string>;
