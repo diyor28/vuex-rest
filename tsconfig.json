@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es5",
     "module": "esnext",
+    "lib": ["ES2018", "dom"],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "declaration": true,
