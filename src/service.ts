@@ -115,67 +115,68 @@ export class Service<ModelType extends BaseModel> extends BaseService {
         const url = urljoin(this.path, id.toString(), '/')
         this.setGetState(true)
         return await this.axiosInstance.get(url).then((response: AxiosResponse<ModelType>) => {
-            this.addItem(response.data)
+            this.context.commit('addItem', response.data)
             return response.data
         }).finally(() => {
-            this.setGetState(false)
+            this.context.commit('setGetState', false)
         })
     }
 
     @Action
     async find(query?: Query<ModelType>): Promise<FindResponse<ModelType>> {
         let params: Query<ModelType> = Object.assign({}, query || {})
-        this.setFindState(true)
+        this.context.commit('setFindState', true)
         return await this.axiosInstance.get(this.path, {params}).then((response: AxiosResponse<FindResponse<ModelType>>) => {
-            this.setData(response.data)
+            this.context.commit('setData', response.data)
             return response.data
         }).catch(e => {
             return Promise.reject(e)
         }).finally(() => {
-            this.setFindState(false)
+            this.context.commit('setFindState', false)
         })
     }
 
     @Action
     async create(data: Partial<ModelType>): Promise<ModelType> {
-        this.setCreateState(true)
+        this.context.commit('setCreateState', true)
         return await this.axiosInstance.post(this.path, data).then((response: AxiosResponse) => {
-            this.addItem(response.data)
+            this.context.commit('addItem', response.data)
             return response.data
         }).catch((error: AxiosError) => {
             if (error.response)
                 console.error(error.response.statusText, error.response.data)
             return Promise.reject(error.response)
         }).finally(() => {
-            this.setCreateState(false)
+            this.context.commit('setCreateState', false)
         })
     }
 
     @Action
     async patch([id, data]: [Pk, Partial<ModelType>]): Promise<ModelType> {
-        this.setPatchState(true)
         const url = urljoin(this.path, id.toString(), '/')
-        return await this.axiosInstance.patch(url, data).then((response: AxiosResponse) => {
-            this.updateItem(response.data)
-            return response.data
-        }).catch((error: AxiosError) => {
-            if (error.response)
-                console.error(error.response.statusText, error.response.data)
-            return Promise.reject(error.response)
-        }).finally(() => {
-            this.setPatchState(false)
-        })
+        this.context.commit('setPatchState', true)
+        return await this.axiosInstance.patch(url, data)
+            .then((response: AxiosResponse) => {
+                this.context.commit('updateItem', response.data)
+                return response.data
+            }).catch((error: AxiosError) => {
+                if (error.response)
+                    console.error(error.response.statusText, error.response.data)
+                return Promise.reject(error.response)
+            }).finally(() => {
+                this.context.commit('setPatchState', false)
+            })
     }
 
     @Action
     async remove(id: Pk): Promise<undefined> {
         const url = urljoin(this.path, id.toString())
-        this.setRemoveState(true)
+        this.context.commit('setRemoveState', true)
         return await this.axiosInstance.delete(url).then((response: AxiosResponse) => {
-            this.removeItem(id)
+            this.context.commit('removeItem', id)
             return response.data
         }).finally(() => {
-            this.setRemoveState(false)
+            this.context.commit('setRemoveState', false)
         })
     }
 
