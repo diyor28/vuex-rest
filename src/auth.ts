@@ -1,4 +1,4 @@
-import {Action, Module} from "vuex-class-modules";
+import {Action, Module} from "vuex-module-decorators";
 import {BaseService, Service} from "./service";
 import {AxiosError, AxiosResponse} from "axios";
 import urljoin from "url-join";
@@ -32,14 +32,7 @@ export class NoAccessToken extends Error {
 @Module
 export default class AuthService<User extends BaseModel> extends BaseService {
     public user: User | null = null
-    public userService: BaseService
-    public path: string
-
-    constructor(baseUrl: string, {store, userService}: AuthOptions<User>) {
-        super(baseUrl, {store, name: "authentication"})
-        this.userService = userService
-        this.path = "authentication/"
-    }
+    public userService!: BaseService
 
     get isLoggedIn(): () => boolean {
         return () => {

@@ -1,32 +1,16 @@
 import Vue from 'vue'
 
-import {rql} from 'javascript-rql';
-import {Action, Mutation, VuexModule} from "vuex-class-modules";
-import axios, {AxiosError, AxiosInstance, AxiosResponse} from "axios";
-import {RegisterOptions} from "vuex-class-modules/lib/module-factory";
+import {Action, Module, Mutation, VuexModule} from "vuex-module-decorators";
+import {AxiosError, AxiosInstance, AxiosResponse} from "axios";
 import {BaseModel, FindResponse, Operation, Pk, Query} from "./rql";
-import {Store} from "vuex";
 import urljoin from "url-join";
-import {getHeader, strip} from "./utils";
 
 export class BaseService extends VuexModule {
-    protected axiosInstance: AxiosInstance
-
-    constructor(baseUrl: string, options: RegisterOptions) {
-        super(options)
-        this.axiosInstance = axios.create({
-            baseURL: baseUrl,
-            timeout: 60000,
-            maxRedirects: 10,
-            paramsSerializer: rql,
-        })
-        this.axiosInstance.interceptors.request.use(function (config) {
-            config.headers = {...config.headers, ...getHeader()}
-            return config;
-        });
-    }
+    public path!: string
+    protected axiosInstance!: AxiosInstance
 }
 
+@Module
 export class Service<ModelType extends BaseModel> extends BaseService {
     public results: ModelType[] = []
     public isGetPending: boolean = false
@@ -37,12 +21,6 @@ export class Service<ModelType extends BaseModel> extends BaseService {
     public total: number = 0
     public offset: number = 0
     public limit: number = 0
-    public path: string
-
-    constructor(store: Store<any>, baseUrl: string, path: string) {
-        super(baseUrl, {store, name: strip(path, '/')})
-        this.path = strip(path, '/') + '/'
-    }
 
     get getStore(): (id: Pk) => ModelType | undefined {
         return (id: Pk) => this.getItemById(id)
