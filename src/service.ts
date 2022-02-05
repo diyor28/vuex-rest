@@ -1,16 +1,14 @@
-import Vue from 'vue'
-
-import {Action, Module, Mutation, VuexModule} from "vuex-module-decorators";
-import {AxiosError, AxiosInstance, AxiosResponse} from "axios";
-import {BaseModel, FindResponse, Operation, Pk, Query} from "./types";
+import {Action, Mutation, VuexModule} from "vuex-module-decorators";
+import {AxiosError, AxiosResponse} from "axios";
+import {BaseModel, FindResponse, Pk, Query} from "./types";
 import urljoin from "url-join";
+import {getItemById, makeAxiosInstance, storeSearch, updateItemById} from "./utils";
 
 export class BaseService extends VuexModule {
+    public baseUrl!: string
     public path!: string
-    protected axiosInstance!: AxiosInstance
 }
 
-@Module({stateFactory: true})
 export class Service<ModelType extends BaseModel> extends BaseService {
     public results: ModelType[] = []
     public isGetPending: boolean = false
@@ -23,7 +21,7 @@ export class Service<ModelType extends BaseModel> extends BaseService {
     public limit: number = 0
 
     get getStore(): (id: Pk) => ModelType | undefined {
-        return (id: Pk) => this.getItemById(id)
+        return (id: Pk) => getItemById(this.results, id)
     }
 
     get findStore(): (query?: Query<ModelType>) => FindResponse<ModelType> {
@@ -36,7 +34,7 @@ export class Service<ModelType extends BaseModel> extends BaseService {
                     limit: this.limit
                 }
             return {
-                results: this.storeSearch(this.results, query),
+                results: storeSearch(this.results, query),
                 total: this.total,
                 limit: this.limit,
                 offset: this.offset
@@ -50,7 +48,7 @@ export class Service<ModelType extends BaseModel> extends BaseService {
         this.limit = data.limit
         this.offset = data.offset
         data.results.forEach(item => {
-            if (!this.getItemById(item.id)) {
+            if (!getItemById(this.results, item.id)) {
                 this.results.unshift(item)
             }
         })
@@ -66,15 +64,15 @@ export class Service<ModelType extends BaseModel> extends BaseService {
 
     @Mutation
     addItem(item: ModelType) {
-        if (this.getItemById(item.id)) {
-            return this.updateItemById(item)
+        if (getItemById(this.results, item.id)) {
+            return updateItemById(this.results, item)
         }
         this.results.push(item)
     }
 
     @Mutation
     updateItem(item: ModelType) {
-        this.updateItemById(item)
+        updateItemById(this.results, item)
     }
 
     @Mutation
@@ -112,9 +110,10 @@ export class Service<ModelType extends BaseModel> extends BaseService {
 
     @Action
     async get(id: Pk) {
+        const axiosInstance = makeAxiosInstance(this.baseUrl)
         const url = urljoin(this.path, id.toString(), '/')
         this.setGetState(true)
-        return await this.axiosInstance.get(url).then((response: AxiosResponse<ModelType>) => {
+        return await axiosInstance.get(url).then((response: AxiosResponse<ModelType>) => {
             this.context.commit('addItem', response.data)
             return response.data
         }).finally(() => {
@@ -124,9 +123,10 @@ export class Service<ModelType extends BaseModel> extends BaseService {
 
     @Action
     async find(query?: Query<ModelType>): Promise<FindResponse<ModelType>> {
+        const axiosInstance = makeAxiosInstance(this.baseUrl)
         let params: Query<ModelType> = Object.assign({}, query || {})
         this.context.commit('setFindState', true)
-        return await this.axiosInstance.get(this.path, {params}).then((response: AxiosResponse<FindResponse<ModelType>>) => {
+        return await axiosInstance.get(this.path, {params}).then((response: AxiosResponse<FindResponse<ModelType>>) => {
             this.context.commit('setData', response.data)
             return response.data
         }).catch(e => {
@@ -138,8 +138,9 @@ export class Service<ModelType extends BaseModel> extends BaseService {
 
     @Action
     async create(data: Partial<ModelType>): Promise<ModelType> {
+        const axiosInstance = makeAxiosInstance(this.baseUrl)
         this.context.commit('setCreateState', true)
-        return await this.axiosInstance.post(this.path, data).then((response: AxiosResponse) => {
+        return await axiosInstance.post(this.path, data).then((response: AxiosResponse) => {
             this.context.commit('addItem', response.data)
             return response.data
         }).catch((error: AxiosError) => {
@@ -153,9 +154,10 @@ export class Service<ModelType extends BaseModel> extends BaseService {
 
     @Action
     async patch([id, data]: [Pk, Partial<ModelType>]): Promise<ModelType> {
+        const axiosInstance = makeAxiosInstance(this.baseUrl)
         const url = urljoin(this.path, id.toString(), '/')
         this.context.commit('setPatchState', true)
-        return await this.axiosInstance.patch(url, data)
+        return await axiosInstance.patch(url, data)
             .then((response: AxiosResponse) => {
                 this.context.commit('updateItem', response.data)
                 return response.data
@@ -170,72 +172,15 @@ export class Service<ModelType extends BaseModel> extends BaseService {
 
     @Action
     async remove(id: Pk): Promise<undefined> {
+        const axiosInstance = makeAxiosInstance(this.baseUrl)
         const url = urljoin(this.path, id.toString())
         this.context.commit('setRemoveState', true)
-        return await this.axiosInstance.delete(url).then((response: AxiosResponse) => {
+        return await axiosInstance.delete(url).then((response: AxiosResponse) => {
             this.context.commit('removeItem', id)
             return response.data
         }).finally(() => {
             this.context.commit('setRemoveState', false)
         })
-    }
-
-    protected storeSort(data: ModelType[], ordering: string) {
-        const ascending = ordering[0] === '-'
-        data.sort((a: ModelType, b: ModelType): number => {
-            if (a[ordering] > b[ordering])
-                return ascending ? 1 : - 1
-            else
-                return ascending ? - 1 : 1
-        })
-        return data
-    }
-
-    protected matchOperation(item: ModelType, key: string, operation: Operation<ModelType, keyof ModelType>): boolean {
-        // @ts-ignore
-        if ('$like' in operation && operation.$like) {
-            if (!item[key])
-                return false
-            return item[key].match(new RegExp(operation.$like, 'i'))
-        }
-
-        // @ts-ignore
-        if ('$in' in operation && operation.$in)
-            return operation.$in.includes(item[key])
-
-        // @ts-ignore
-        if ('$ne' in operation && operation.$ne)
-            return item[key] !== operation.$ne
-        return true
-    }
-
-    protected storeSearch(data: ModelType[], query: Query<ModelType>): ModelType[] {
-        const {$ordering, limit, offset} = query
-        delete query.offset
-        delete query.limit
-        delete query.$ordering
-        for (const [key, operation] of Object.entries(query)) {
-            data = data.filter(el => {
-                if (typeof operation === 'object')
-                    return this.matchOperation(el, key, operation)
-                return el[key] === operation
-            })
-        }
-        if ($ordering) { // @ts-ignore
-            return this.storeSort(data, $ordering)
-        }
-        return data
-    }
-
-    protected getItemById(id: Pk): ModelType | undefined {
-        return this.results.find(el => el.id.toString() === id.toString())
-    }
-
-    protected updateItemById(item: ModelType) {
-        const idx = this.results.findIndex(el => el.id === item.id)
-        if (idx === - 1)
-            return
-        Vue.set(this.results, idx, item)
     }
 }
 
