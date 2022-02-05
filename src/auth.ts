@@ -1,9 +1,8 @@
 import {Action, Module} from "vuex-module-decorators";
-import {BaseService, Service} from "./service";
+import {BaseService} from "./service";
 import {AxiosError, AxiosResponse} from "axios";
 import urljoin from "url-join";
-import {Store} from "vuex";
-import {BaseModel} from "./rql";
+import {BaseModel} from "./types";
 
 export interface AccessToken {
     access: string
@@ -18,18 +17,13 @@ export interface LoginCredentials {
     password: string
 }
 
-export interface AuthOptions<User extends BaseModel> {
-    store: Store<any>
-    userService: Service<User>
-}
-
 export class NoAccessToken extends Error {
     constructor() {
         super('No access token');
     }
 }
 
-@Module
+@Module({stateFactory: true})
 export default class AuthService<User extends BaseModel> extends BaseService {
     public user: User | null = null
     public userService!: BaseService

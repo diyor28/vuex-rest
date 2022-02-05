@@ -46,3 +46,14 @@ export interface IRQL<T> {
 
 export type Query<T extends BaseModel> = IRQL<T> & FieldsIRQL<T>
 
+export interface ServiceState<ModelType extends BaseModel> {
+    results: Array<ModelType>
+    isGetPending: boolean
+    isFindPending: boolean
+    isCreatePending: boolean
+    isPatchPending: boolean
+    isRemovePending: boolean
+    total: number
+    offset: number
+    limit: number
+}

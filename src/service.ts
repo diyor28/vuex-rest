@@ -2,7 +2,7 @@ import Vue from 'vue'
 
 import {Action, Module, Mutation, VuexModule} from "vuex-module-decorators";
 import {AxiosError, AxiosInstance, AxiosResponse} from "axios";
-import {BaseModel, FindResponse, Operation, Pk, Query} from "./rql";
+import {BaseModel, FindResponse, Operation, Pk, Query} from "./types";
 import urljoin from "url-join";
 
 export class BaseService extends VuexModule {
@@ -10,7 +10,7 @@ export class BaseService extends VuexModule {
     protected axiosInstance!: AxiosInstance
 }
 
-@Module
+@Module({stateFactory: true})
 export class Service<ModelType extends BaseModel> extends BaseService {
     public results: ModelType[] = []
     public isGetPending: boolean = false
