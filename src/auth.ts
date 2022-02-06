@@ -24,7 +24,6 @@ export class NoAccessToken extends Error {
     }
 }
 
-@Module({stateFactory: true})
 export default class BaseAuthService<User extends BaseModel> extends BaseService {
     public user: User | null = null
     public userService!: BaseService
