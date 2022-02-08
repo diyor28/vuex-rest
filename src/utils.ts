@@ -1,5 +1,3 @@
-import axios, {AxiosInstance} from "axios";
-import {rql} from "javascript-rql";
 import {BaseModel, Operation, Pk, Query} from "./types";
 import Vue from "vue";
 
@@ -13,20 +11,6 @@ export function getHeader(): { Authorization: string } | {} {
 	if (!accessToken)
 		return {}
 	return {"Authorization": "Bearer " + accessToken};
-}
-
-export function makeAxiosInstance(baseUrl: string): AxiosInstance {
-	let axiosInstance = axios.create({
-		baseURL: baseUrl,
-		timeout: 60000,
-		maxRedirects: 10,
-		paramsSerializer: rql,
-	})
-	axiosInstance.interceptors.request.use(function (config) {
-		config.headers = {...config.headers, ...getHeader()}
-		return config;
-	});
-	return axiosInstance
 }
 
 export function storeSort<ModelType extends BaseModel>(data: ModelType[], ordering: string) {

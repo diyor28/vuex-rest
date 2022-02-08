@@ -1,9 +1,9 @@
-import {Action, Module} from "vuex-module-decorators";
+import {Action} from "vuex-module-decorators";
 import {BaseService} from "./service";
 import {AxiosError, AxiosResponse} from "axios";
 import urljoin from "url-join";
 import {BaseModel} from "./types";
-import {makeAxiosInstance} from "./utils";
+import {$axios} from "./axios";
 
 export interface AccessToken {
     access: string
@@ -40,8 +40,7 @@ export default class BaseAuthService<User extends BaseModel> extends BaseService
 
     @Action
     async login({email, password}: LoginCredentials): Promise<AuthTokens> {
-        const axiosInstance = makeAxiosInstance(this.baseUrl)
-        return await axiosInstance.post(this.path, {email, password})
+        return await $axios.post(this.path, {email, password})
             .then((response: AxiosResponse<AuthTokens>) => response.data)
             .then(data => {
                 localStorage.setItem('access-token', data.access)
@@ -52,12 +51,11 @@ export default class BaseAuthService<User extends BaseModel> extends BaseService
 
     @Action
     async refresh(): Promise<string> {
-        const axiosInstance = makeAxiosInstance(this.baseUrl)
         const accessToken = localStorage.getItem('access-token')
         if (!accessToken)
             throw new NoAccessToken()
         const url = urljoin(this.path, 'refresh/')
-        return await axiosInstance.post(url, {access: accessToken})
+        return await $axios.post(url, {access: accessToken})
             .then((response: AxiosResponse<AccessToken>) => response.data)
             .then(data => {
                 localStorage.setItem('access-token', data.access)
