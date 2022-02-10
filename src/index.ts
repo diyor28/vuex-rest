@@ -1,7 +1,39 @@
 import BaseAuthService from "./auth";
+
 export {LoginCredentials} from './auth'
 export {BaseService, Service} from "./service";
-export {BaseModel, FindResponse, Query, Pk, ServiceState} from './types'
+export {
+	BaseModel,
+	FindResponse,
+	Query,
+	Pk,
+	ServiceState,
+	GetterGet,
+	GetterFind,
+	MutationSetData,
+	MutationClearItems,
+	MutationAddItem,
+	MutationUpdateItem,
+	MutationRemoveItem,
+	MutationSetFindState,
+	MutationSetGetState,
+	MutationSetCreateState,
+	MutationSetPatchState,
+	MutationSetRemoveState,
+	ActionGet,
+	ActionFind,
+	ActionCreate,
+	ActionPatch,
+	ActionRemove,
+	ActionRefresh,
+	ActionLogin
+} from './types'
 export {strip} from './utils'
-export {initializeAxiosInstance, $axios, getAxiosConfig, getAuthHeader, requestInterceptor} from './axios'
+export {
+	$axios,
+	initializeAxiosInstance,
+	getAxiosConfig,
+	getAuthHeader,
+	requestInterceptor
+} from './axios'
 export {BaseAuthService}
