@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/diyor28/vuex-rest#readme",
   "devDependencies": {
+    "@types/node": "^17.0.17",
     "@types/url-join": "^4.0.1",
     "typescript": "^4.5.4"
   },
