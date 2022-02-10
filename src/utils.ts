@@ -6,13 +6,6 @@ export function strip(string: string, char: string) {
 	return string.replace(regex, '');
 }
 
-export function getHeader(): { Authorization: string } | {} {
-	const accessToken = localStorage.getItem("access-token")
-	if (!accessToken)
-		return {}
-	return {"Authorization": "Bearer " + accessToken};
-}
-
 export function storeSort<ModelType extends BaseModel>(data: ModelType[], ordering: string) {
 	const ascending = ordering[0] === '-'
 	data.sort((a: ModelType, b: ModelType): number => {

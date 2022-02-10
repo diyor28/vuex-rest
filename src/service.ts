@@ -1,5 +1,5 @@
 import {Action, Mutation, VuexModule} from "vuex-module-decorators";
-import {AxiosError, AxiosResponse} from "axios";
+import axios, {AxiosError, AxiosInstance, AxiosResponse} from "axios";
 import {BaseModel, FindResponse, Pk, Query} from "./types";
 import urljoin from "url-join";
 import {getItemById, storeSearch, updateItemById} from "./utils";
@@ -7,6 +7,15 @@ import {$axios} from "./axios";
 
 export class BaseService extends VuexModule {
     public path!: string
+    public $axios?: AxiosInstance
+
+    protected getAxiosInstance(): AxiosInstance {
+        if (this.$axios)
+            return this.$axios
+        if (!axios)
+            throw new Error('Call "initializeAxiosInstance()" before using your service')
+        return $axios
+    }
 }
 
 export class Service<ModelType extends BaseModel> extends BaseService {
@@ -112,7 +121,8 @@ export class Service<ModelType extends BaseModel> extends BaseService {
     async get(id: Pk) {
         const url = urljoin(this.path, id.toString(), '/')
         this.setGetState(true)
-        return await $axios.get(url).then((response: AxiosResponse<ModelType>) => {
+        const axios = this.getAxiosInstance()
+        return await axios.get(url).then((response: AxiosResponse<ModelType>) => {
             this.context.commit('addItem', response.data)
             return response.data
         }).finally(() => {
@@ -124,7 +134,8 @@ export class Service<ModelType extends BaseModel> extends BaseService {
     async find(query?: Query<ModelType>): Promise<FindResponse<ModelType>> {
         let params: Query<ModelType> = Object.assign({}, query || {})
         this.context.commit('setFindState', true)
-        return await $axios.get(this.path, {params}).then((response: AxiosResponse<FindResponse<ModelType>>) => {
+        const axios = this.getAxiosInstance()
+        return await axios.get(this.path, {params}).then((response: AxiosResponse<FindResponse<ModelType>>) => {
             this.context.commit('setData', response.data)
             return response.data
         }).catch(e => {
@@ -137,7 +148,8 @@ export class Service<ModelType extends BaseModel> extends BaseService {
     @Action
     async create(data: Partial<ModelType>): Promise<ModelType> {
         this.context.commit('setCreateState', true)
-        return await $axios.post(this.path, data).then((response: AxiosResponse) => {
+        const axios = this.getAxiosInstance()
+        return await axios.post(this.path, data).then((response: AxiosResponse) => {
             this.context.commit('addItem', response.data)
             return response.data
         }).catch((error: AxiosError) => {
@@ -153,7 +165,8 @@ export class Service<ModelType extends BaseModel> extends BaseService {
     async patch([id, data]: [Pk, Partial<ModelType>]): Promise<ModelType> {
         const url = urljoin(this.path, id.toString(), '/')
         this.context.commit('setPatchState', true)
-        return await $axios.patch(url, data)
+        const axios = this.getAxiosInstance()
+        return await axios.patch(url, data)
             .then((response: AxiosResponse) => {
                 this.context.commit('updateItem', response.data)
                 return response.data
@@ -170,7 +183,8 @@ export class Service<ModelType extends BaseModel> extends BaseService {
     async remove(id: Pk): Promise<undefined> {
         const url = urljoin(this.path, id.toString())
         this.context.commit('setRemoveState', true)
-        return await $axios.delete(url).then((response: AxiosResponse) => {
+        const axios = this.getAxiosInstance()
+        return await axios.delete(url).then((response: AxiosResponse) => {
             this.context.commit('removeItem', id)
             return response.data
         }).finally(() => {
