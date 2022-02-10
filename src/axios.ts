@@ -1,5 +1,6 @@
 import axios, {AxiosInstance, AxiosRequestConfig} from "axios";
 import {rql} from "javascript-rql";
+import exp from "constants";
 
 let $axios: AxiosInstance
 
@@ -28,6 +29,10 @@ export function initializeAxiosInstance(baseUrl: string, config?: AxiosRequestCo
 	$axios = axios.create({...getAxiosConfig(baseUrl), ...config})
 	$axios.interceptors.request.use(requestInterceptor);
 	return $axios
+}
+
+export function setAxiosInstance(axios: AxiosInstance) {
+	$axios = axios
 }
 
 export {$axios}
