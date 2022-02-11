@@ -63,3 +63,7 @@ export function updateItemById<ModelType extends BaseModel>(data: Array<ModelTyp
 		return
 	Vue.set(data, idx, item)
 }
+
+export function isNode(): boolean {
+	return typeof process === 'object'
+}

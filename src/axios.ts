@@ -1,11 +1,11 @@
 import axios, {AxiosInstance, AxiosRequestConfig} from "axios";
 import {rql} from "javascript-rql";
-import exp from "constants";
+import {$storage} from "./storage";
 
 let $axios: AxiosInstance
 
 export function getAuthHeader(): { Authorization: string } | {} {
-	const accessToken = localStorage.getItem("access-token")
+	const accessToken = $storage.getItem("access-token")
 	if (!accessToken)
 		return {}
 	return {"Authorization": "Bearer " + accessToken};

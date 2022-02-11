@@ -1,6 +1,7 @@
 import BaseAuthService from "./auth";
 
 export {LoginCredentials} from './auth'
+export {setStorage, $storage, StorageInterface} from './storage'
 export {BaseService, Service} from "./service";
 export {
 	BaseModel,
