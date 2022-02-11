@@ -34,6 +34,7 @@ export {
 	initializeAxiosInstance,
 	getAxiosConfig,
 	getAuthHeader,
-	requestInterceptor
+	requestInterceptor,
+	setAxiosInstance
 } from './axios'
 export {BaseAuthService}
