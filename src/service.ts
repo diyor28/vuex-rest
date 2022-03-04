@@ -49,7 +49,7 @@ export class Service<ModelType extends BaseModel> extends BaseService {
         this.offset = data.offset
         data.results.forEach(item => {
             if (!getItemById(this.results, item.id)) {
-                this.results.unshift(item)
+                this.results.push(item)
             }
         })
     }
