@@ -67,7 +67,7 @@ export class Service<ModelType extends BaseModel> extends BaseService {
         if (getItemById(this.results, item.id)) {
             return updateItemById(this.results, item)
         }
-        this.results.push(item)
+        this.results.unshift(item)
     }
 
     @Mutation
