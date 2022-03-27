@@ -111,7 +111,7 @@ export class Service<ModelType extends BaseModel> extends BaseService {
     @Action
     async get(id: Pk) {
         const url = urljoin(this.path, id.toString(), '/')
-        this.setGetState(true)
+        this.context.commit('setGetState', true)
         return await $axios.get(url).then((response: AxiosResponse<ModelType>) => {
             this.context.commit('addItem', response.data)
             return response.data
