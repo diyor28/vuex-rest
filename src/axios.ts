@@ -15,12 +15,12 @@ export function getAxiosConfig(baseUrl: string): AxiosRequestConfig {
 	return {
 		baseURL: baseUrl,
 		timeout: 60000,
-		maxRedirects: 10,
-		paramsSerializer: rql,
+		maxRedirects: 10
 	}
 }
 
 export function requestInterceptor(config: AxiosRequestConfig) {
+	config.paramsSerializer = rql
 	config.headers = {...config.headers, ...getAuthHeader()}
 	return config
 }
