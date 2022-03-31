@@ -28,7 +28,7 @@ export class NoAccessToken extends Error {
 
 export default class BaseAuthService<User extends BaseModel> extends BaseService {
     public user: User | null = null
-    public userService!: BaseService
+    public usersService!: string
 
     get isLoggedIn(): () => boolean {
         return () => {
@@ -41,12 +41,24 @@ export default class BaseAuthService<User extends BaseModel> extends BaseService
     }
 
     @Action
+    async getCurrentUser() {
+        const token = $storage.getItem('access-token')
+        if (!token)
+            throw new Error('No authenticated')
+        const jwtBody = JSON.parse(atob(token.split('.')[1]))
+        this.context.dispatch(this.usersService + '/get', jwtBody.user_id, {root: true}).then((user: any) => {
+            this.user = user
+        })
+    }
+
+    @Action
     async login({email, password}: LoginCredentials): Promise<AuthTokens> {
         return await $axios.post(this.path, {email, password})
             .then((response: AxiosResponse<AuthTokens>) => response.data)
             .then(data => {
                 $storage.setItem('access-token', data.access)
                 $storage.setItem('refresh-token', data.refresh)
+                this.getCurrentUser()
                 return data
             })
     }
