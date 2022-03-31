@@ -65,5 +65,5 @@ export function updateItemById<ModelType extends BaseModel>(data: Array<ModelTyp
 }
 
 export function isNode(): boolean {
-	return typeof process === 'object'
+	return typeof window === 'undefined'
 }
