@@ -1,4 +1,4 @@
-import {Action} from "vuex-module-decorators";
+import {Action, Mutation} from "vuex-module-decorators";
 import {BaseService} from "./service";
 import {AxiosError, AxiosResponse} from "axios";
 import urljoin from "url-join";
@@ -40,14 +40,21 @@ export default class BaseAuthService<User extends BaseModel> extends BaseService
         }
     }
 
+    @Mutation
+    setCurrentUser(user: User) {
+        this.user = user
+    }
+
     @Action
     async getCurrentUser() {
         const token = $storage.getItem('access-token')
         if (!token)
             throw new Error('No authenticated')
         const jwtBody = JSON.parse(atob(token.split('.')[1]))
-        this.context.dispatch(this.usersService + '/get', jwtBody.user_id, {root: true}).then((user: any) => {
-            this.user = user
+        return this.context.dispatch(this.usersService + '/get', jwtBody.user_id, {root: true}).then((user: any) => {
+            // TODO: find a more ellegant solution
+            this.context.commit('setCurrentUser', user)
+            return user
         })
     }
 
