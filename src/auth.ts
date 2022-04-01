@@ -65,7 +65,7 @@ export default class BaseAuthService<User extends BaseModel> extends BaseService
             .then(data => {
                 $storage.setItem('access-token', data.access)
                 $storage.setItem('refresh-token', data.refresh)
-                this.getCurrentUser()
+                this.context.dispatch('getCurrentUser')
                 return data
             })
     }
