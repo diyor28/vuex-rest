@@ -1,9 +1,10 @@
 import {Action, Mutation, VuexModule} from "vuex-module-decorators";
 import {AxiosError, AxiosResponse} from "axios";
-import {BaseModel, FindResponse, Pk, Query} from "./types";
+import {BaseModel, FindResponse, Pk} from "./types";
 import urljoin from "url-join";
 import {getItemById, storeSearch, updateItemById} from "./utils";
 import {$axios} from "./axios";
+import {Query} from "../../djangots-rql";
 
 export class BaseService extends VuexModule {
     public path!: string

@@ -6,7 +6,6 @@ export {BaseService, Service} from "./service";
 export {
 	BaseModel,
 	FindResponse,
-	Query,
 	Pk,
 	ServiceState,
 	GetterGet,

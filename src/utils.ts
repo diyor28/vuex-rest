@@ -1,5 +1,6 @@
-import {BaseModel, Operation, Pk, Query} from "./types";
+import {BaseModel, Pk} from "./types";
 import Vue from "vue";
+import {Operation, Query} from "django-rql";
 
 export function strip(string: string, char: string) {
 	const regex = new RegExp(`^${char}|\\${char}$`, 'g')
