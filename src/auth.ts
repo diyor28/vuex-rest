@@ -2,7 +2,7 @@ import {Action, Mutation} from "vuex-module-decorators";
 import {BaseService} from "./service";
 import {AxiosError, AxiosResponse} from "axios";
 import urljoin from "url-join";
-import {BaseModel} from "./types";
+import {BaseModel} from "js-rql";
 import {$axios} from "./axios";
 import {$storage} from "./storage";
 

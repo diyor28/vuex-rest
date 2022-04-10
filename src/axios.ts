@@ -1,5 +1,5 @@
 import axios, {AxiosInstance, AxiosRequestConfig} from "axios";
-import {rql} from "javascript-rql";
+import rql from "js-rql";
 import {$storage} from "./storage";
 
 let $axios: AxiosInstance

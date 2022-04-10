@@ -1,5 +1,5 @@
 import {AuthTokens, LoginCredentials} from "./auth";
-import {Query} from "django-rql";
+import {BaseModel, Query} from "js-rql";
 
 export type Pk = string | number
 
@@ -10,11 +10,6 @@ export interface FindResponse<T> {
     results: T[]
 }
 
-export interface BaseModel {
-    id: string
-
-    [key: string]: any
-}
 
 export interface ServiceState<ModelType extends BaseModel> {
     results: Array<ModelType>

@@ -1,10 +1,10 @@
 import {Action, Mutation, VuexModule} from "vuex-module-decorators";
 import {AxiosError, AxiosResponse} from "axios";
-import {BaseModel, FindResponse, Pk} from "./types";
+import {FindResponse, Pk} from "./types";
 import urljoin from "url-join";
 import {getItemById, storeSearch, updateItemById} from "./utils";
 import {$axios} from "./axios";
-import {Query} from "../../djangots-rql";
+import {BaseModel, Query} from "js-rql";
 
 export class BaseService extends VuexModule {
     public path!: string
@@ -34,9 +34,10 @@ export class Service<ModelType extends BaseModel> extends BaseService {
                     offset: this.offset,
                     limit: this.limit
                 }
+            const results = storeSearch(this.results, query)
             return {
-                results: storeSearch(this.results, query),
-                total: this.total,
+                results,
+                total: results.length,
                 limit: this.limit,
                 offset: this.offset
             }
@@ -109,7 +110,7 @@ export class Service<ModelType extends BaseModel> extends BaseService {
         this.isRemovePending = val
     }
 
-    @Action
+    @Action({rawError: true})
     async get(id: Pk) {
         const url = urljoin(this.path, id.toString(), '/')
         this.context.commit('setGetState', true)
@@ -121,7 +122,7 @@ export class Service<ModelType extends BaseModel> extends BaseService {
         })
     }
 
-    @Action
+    @Action({rawError: true})
     async find(query?: Query<ModelType>): Promise<FindResponse<ModelType>> {
         let params: Query<ModelType> = Object.assign({}, query || {})
         this.context.commit('setFindState', true)
@@ -135,7 +136,7 @@ export class Service<ModelType extends BaseModel> extends BaseService {
         })
     }
 
-    @Action
+    @Action({rawError: true})
     async create(data: Partial<ModelType>): Promise<ModelType> {
         this.context.commit('setCreateState', true)
         return await $axios.post(this.path, data).then((response: AxiosResponse) => {
@@ -150,7 +151,7 @@ export class Service<ModelType extends BaseModel> extends BaseService {
         })
     }
 
-    @Action
+    @Action({rawError: true})
     async patch([id, data]: [Pk, Partial<ModelType>]): Promise<ModelType> {
         const url = urljoin(this.path, id.toString(), '/')
         this.context.commit('setPatchState', true)
@@ -167,7 +168,7 @@ export class Service<ModelType extends BaseModel> extends BaseService {
             })
     }
 
-    @Action
+    @Action({rawError: true})
     async remove(id: Pk): Promise<undefined> {
         const url = urljoin(this.path, id.toString())
         this.context.commit('setRemoveState', true)

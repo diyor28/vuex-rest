@@ -1,56 +1,133 @@
-import {BaseModel, Pk} from "./types";
+import {Pk} from "./types";
 import Vue from "vue";
-import {Operation, Query} from "django-rql";
+import {BaseModel, Query} from "js-rql";
+import {IRQLExpression} from "js-rql/dist/types";
+
+const expressions = ['$eq', '$ne', '$gt', '$ge', '$lt', '$le', '$like', '$ilike', '$in', '$out', '$range', '$not', '$or', '$and'];
 
 export function strip(string: string, char: string) {
 	const regex = new RegExp(`^${char}|\\${char}$`, 'g')
 	return string.replace(regex, '');
 }
 
-export function storeSort<ModelType extends BaseModel>(data: ModelType[], ordering: string) {
-	const ascending = ordering[0] === '-'
-	data.sort((a: ModelType, b: ModelType): number => {
-		if (a[ordering] > b[ordering])
-			return ascending ? 1 : - 1
-		else
-			return ascending ? - 1 : 1
+function isRQLExp(object: any): object is IRQLExpression<any, any> {
+	if (typeof object !== 'object')
+		return false
+	return expressions.some(expression => expression in object);
+}
+
+export function storeSort<M extends BaseModel = BaseModel, K extends keyof M = keyof M>(data: M[], $ordering: K | K[]): M[] {
+	$ordering = Array.isArray($ordering) ? $ordering : [$ordering];
+	const dir: number[] = [];
+	// TODO: figure out correct way to do this
+	const fields = (<string[]>$ordering).map((field, index) => {
+		if (field[0] === "-") {
+			dir[index] = - 1;
+			field = field.substring(1);
+		} else {
+			dir[index] = 1;
+		}
+		return field;
+	})
+	data = data.slice().sort((a, b) => {
+		for (let i = 0; i < fields.length; i ++) {
+			const field = fields[i];
+			if (a[field] > b[field])
+				return dir[i];
+			if (a[field] < b[field])
+				return - (dir[i]);
+		}
+		return 0;
 	})
 	return data
 }
 
-export function matchOperation<ModelType extends BaseModel>(item: ModelType, key: string, operation: Operation<ModelType, keyof ModelType>): boolean {
-	// @ts-ignore
-	if ('$like' in operation && operation.$like) {
-		if (!item[key])
-			return false
-		return item[key].match(new RegExp(operation.$like, 'i'))
-	}
+function eq(a: any, b: any): boolean {
+	return a === b
+}
 
-	// @ts-ignore
-	if ('$in' in operation && operation.$in)
-		return operation.$in.includes(item[key])
+function lt(a: any, b: any): boolean {
+	return a < b
+}
 
-	// @ts-ignore
-	if ('$ne' in operation && operation.$ne)
-		return item[key] !== operation.$ne
-	return true
+function gt(a: any, b: any): boolean {
+	return a > b
+}
+
+function selectFields<M extends BaseModel>(data: M[], $select: (keyof M)[]): M[] {
+	return data.map(el => {
+		return <M>$select.reduce((result: object, field: keyof M) => {
+			return {...result, [field]: el[field]}
+		}, {})
+	})
+}
+
+// {name: 'Name'}, 'name', {$like: 'Nam'}
+export function matchOperation<M extends BaseModel>(value: any, expression: IRQLExpression<M, keyof M>): boolean {
+	return Object.entries(expression).map(([key, expVal]: [keyof M, M[keyof M]]) => {
+		if (key === '$like') {
+			if (!value)
+				return false
+			return value.match(new RegExp(expVal))
+		}
+
+		if (key === '$range') {
+			return gt(value, expVal.min) && lt(value, expVal.max)
+		}
+
+		if (key === '$not')
+			return !matchOperation(value, expVal)
+
+		if (key === '$ilike') {
+			if (!value)
+				return false
+			return value.match(new RegExp(expVal, 'i'))
+		}
+
+		if (key === '$in')
+			return expVal.includes(value)
+
+		if (key === '$out')
+			return !expVal.includes(value)
+
+		if (key === '$ne')
+			return !eq(value, expVal)
+
+		if (key === '$eq')
+			return eq(value, expVal)
+
+		if (key === '$gt')
+			return gt(value, expVal)
+
+		if (key === '$lt')
+			return lt(value, expVal)
+
+		if (key === '$le')
+			return lt(value, expVal) || eq(value, expVal)
+
+		if (key === '$ge')
+			return gt(value, expVal) || eq(value, expVal)
+	}).every(el => el)
 }
 
 export function storeSearch<ModelType extends BaseModel>(data: ModelType[], query: Query<ModelType>): ModelType[] {
-	const {$ordering, limit, offset} = query
+	const {$ordering, $select, limit, offset} = query
 	delete query.offset
 	delete query.limit
 	delete query.$ordering
-	for (const [key, operation] of Object.entries(query)) {
+	delete query.$select
+	for (const [key, expression] of Object.entries(query)) {
 		data = data.filter(el => {
-			if (typeof operation === 'object')
-				return matchOperation(el, key, operation)
-			return el[key] === operation
+			if (isRQLExp(expression))
+				return matchOperation(el[key], expression)
+			return eq(el[key], expression)
 		})
 	}
-	if ($ordering) { // @ts-ignore
-		return this.storeSort(data, $ordering)
-	}
+	if ($ordering)
+		data = storeSort(data, $ordering)
+
+	if ($select)
+		return selectFields(data, $select)
 	return data
 }
 
