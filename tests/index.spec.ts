@@ -56,9 +56,9 @@ describe('Store search', function () {
 	})
 	const testService = getModule(TestService, store)
 
-	it('Store search $eq', async () => {
+	it('Store search key:value', async () => {
 		await testService.find()
-		const data = testService.findStore({name: 'Name1', age: {$eq: 19}})
+		const data = testService.findStore({age: 19})
 		expect(data, 'filtered result').deep.equal({
 			total: 1,
 			offset: 0,
@@ -72,9 +72,9 @@ describe('Store search', function () {
 		})
 	});
 
-	it('Store search $eq with dates', async () => {
+	it('Store search $eq', async () => {
 		await testService.find()
-		const data = testService.findStore({date: "2022-04-06T00:00:00.000Z"})
+		const data = testService.findStore({age: {$eq: 19}})
 		expect(data, 'filtered result').deep.equal({
 			total: 1,
 			offset: 0,
@@ -133,23 +133,6 @@ describe('Store search', function () {
 			]
 		})
 	});
-
-	it('Store search $gt with dates', async () => {
-		await testService.find()
-		const data = testService.findStore({date: "2022-04-06T00:00:00.000Z"})
-		expect(data, 'filtered result').deep.equal({
-			total: 1,
-			offset: 0,
-			limit: 10,
-			results: [{
-				id: '1',
-				name: 'Name1',
-				age: 19,
-				date: '2022-04-06T00:00:00.000Z'
-			}]
-		})
-	});
-
 
 	it('Store search $gt with dates', async () => {
 		await testService.find()
@@ -328,26 +311,43 @@ describe('Store search', function () {
 	it('Store search $or', async () => {
 		await testService.find()
 		const data = testService.findStore({$or: [
-				{age: 18},
+				{age: 19},
 				{name: 'Name2'}
 			]})
 		expect(data, 'sorted result').deep.equal({
-			total: 3,
+			total: 2,
 			offset: 0,
 			limit: 10,
 			results: [
 				{
-					id: '3',
-					name: 'Name3',
-					age: 28,
-					date: '2022-04-08T00:00:00.000Z'
+					id: '1',
+					name: 'Name1',
+					age: 19,
+					date: '2022-04-06T00:00:00.000Z'
 				},
 				{
 					id: '2',
 					name: 'Name2',
 					age: 22,
 					date: '2022-04-07T00:00:00.000Z'
-				},
+				}
+			]
+		})
+	});
+
+	it('Store search $and', async () => {
+		await testService.find()
+		const data = testService.findStore({
+			$or: [
+				{age: 19},
+				{name: 'Name1'}
+			]
+		})
+		expect(data, 'sorted result').deep.equal({
+			total: 1,
+			offset: 0,
+			limit: 10,
+			results: [
 				{
 					id: '1',
 					name: 'Name1',

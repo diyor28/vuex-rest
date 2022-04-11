@@ -20,9 +20,12 @@ initializeAxiosInstance(baseUrl)
 ```
 
 ## Usage
+Create the users service
 
 ```typescript
-import {BaseModel, Service} from "@diyor28/vuex-rest";
+// store/services/user.ts
+
+import {BaseModel, Service} from "vuex-rql";
 import {Module} from "vuex-module-decorators";
 
 export interface User extends BaseModel {
@@ -37,17 +40,111 @@ export default class UserService extends Service<User> {
 }
 ```
 
-## Nuxt
+Create the authentication service
 
-Include this in your nuxt.config.js
+```typescript
+// store/auth.ts
 
-```
-{
-    plugins: [
-       '@diyor28/vuex-rest/dist/nuxt'
-    ]
+import {BaseAuthService} from "vue-rql";
+import {User} from "@/store/services/user";
+import {Module} from "vuex-module-decorators";
+
+@Module({name: 'auth', namespaced: true})
+export default class AuthService extends BaseAuthService<User> {
+	path = 'authentication/';
+	usersService = 'users';
 }
 ```
 
+And finally connect everything to the store
 
+```typescript
+interface RootState {
+	users: ServiceState<User>,
+}
+
+const store = new Vuex.Store<RootState>({
+	mutations: {},
+	actions: {},
+	modules: {
+		'auth': AuthService,
+		'users': UserService,
+	}
+})
+
+export const usersService = getModule(UserService, store)
+export const authService = getModule(AuthService, store)
+```
+
+You can now import it in your vue component and use in the following fashion
+
+```typescript
+import {usersService} from '@/store'
+usersService.find().then(data => {
+	// do stuff
+})
+
+const data = usersService.findStore({}).results // acess data from store
+```
+
+## Querying
+
+## $eq
+
+Find users with name John: 
+```typescript
+usersService.findStore({name: 'John'})
+```
+or
+```typescript
+usersService.findStore({name: {$eq: 'John'}})
+```
+
+## $gt, $lt, $le, $ge
+Find users between ages 18 and 65 inclusive
+
+```typescript
+usersService.findStore({age: {$ge: 18, $le: 65}})
+```
+or exclusive
+```typescript
+usersService.findStore({age: {$gt: 18, $lt: 65}})
+```
+
+## $select
+Return specific fields
+```typescript
+usersService.findStore({$select: ['name', 'age']})
+```
+
+## $like
+Search for users with name John
+```typescript
+usersService.findStore({name: {$like: 'John'}})
+```
+
+## $ilike
+Search for users with name John (case in-sensitive):
+```typescript
+usersService.findStore({name: {$ilike: 'john'}})
+```
+
+## $in, $out
+Search for users where the property does ($in) or does not ($out) match any of the given values:
+```typescript
+usersService.findStore({roleId: {$in: [2, 5]}})
+```
+or
+```typescript
+usersService.findStore({roleId: {$out: [2, 5]}})
+```
+
+## $or
+Combine multiple queries using logical `OR`
+```typescript
+usersService.findStore({$or: [
+        {age: {$gt: 18, $lt: 65}},
+        {active: {$eq: true}}
+    ]})
+```
 
