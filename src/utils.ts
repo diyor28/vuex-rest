@@ -1,6 +1,6 @@
 import {Pk} from "./types";
 import Vue from "vue";
-import {BaseModel, FieldsIRQL, Operation, Query} from "js-rql";
+import {BaseModel, FieldsIRQL, Query} from "js-rql";
 import {IRQLExpression} from "js-rql/dist/types";
 
 
@@ -80,69 +80,49 @@ function isRQLExp(object: any): object is IRQLExpression<any, any> {
 	return expressions.some(expression => expression in object);
 }
 
-function evalExp<M extends BaseModel>(value: M[keyof M], expK: string, expV: IRQLExpression<M>[keyof IRQLExpression<M>]) {
-	switch (expK) {
+function evalExp<M extends BaseModel>(model: M, value: any, key: string, expression: any): boolean {
+	switch (key) {
+		case '$and':
+			return expression.every((q: FieldsIRQL<M>) => isMatch(model, q))
+		case '$or':
+			return expression.some((q: FieldsIRQL<M>) => isMatch(model, q))
+		case '$not':
+			return !_isMatch(model, expression, value)
 		case '$like':
-			return $like(value, expV)
+			return $like(value, expression)
 		case '$ilike':
-			return $ilike(value, expV)
+			return $ilike(value, expression)
 		case '$range':
 			// @ts-ignore
-			return $gt(value, expV.min) && $lt(value, expV.max)
+			return $gt(value, expression.min) && $lt(value, expression.max)
 		case '$in':
-			return $in(value, expV)
+			return $in(value, expression)
 		case '$out':
-			return !$in(value, expV)
+			return !$in(value, expression)
 		case '$ne':
-			return !$eq(value, expV)
+			return !$eq(value, expression)
 		case '$eq':
-			return $eq(value, expV)
+			return $eq(value, expression)
 		case '$gt':
-			return $gt(value, expV)
+			return $gt(value, expression)
 		case '$lt':
-			return $lt(value, expV)
+			return $lt(value, expression)
 		case '$le':
-			return $lt(value, expV) || $eq(value, expV)
+			return $lt(value, expression) || $eq(value, expression)
 		case '$ge':
-			return $gt(value, expV) || $eq(value, expV)
-		default:
-			return $eq(value, expV)
+			return $gt(value, expression) || $eq(value, expression)
 	}
-}
-
-
-function isMatch<M extends BaseModel>(model: M, key: keyof M, expression: Operation<M, keyof M>): boolean {
-	const value = model[key];
 	if (isRQLExp(expression))
-		return Object.entries(expression).every(([expK, expV]) => {
-			if (expK === '$not')
-				return !isMatch(model, key, expV)
-
-			if (key === '$and' && Array.isArray(expression))
-				return expression.every((q: FieldsIRQL<M>) => filterAgainstQ(model, q))
-
-			if (key === '$or' && Array.isArray(expression))
-				return expression.some((q: FieldsIRQL<M>) => filterAgainstQ(model, q))
-
-			return evalExp(value, expK, expV)
-		})
-	return $eq(value, expression)
+		return _isMatch(model, expression, value)
+	return $eq(model[key], expression)
 }
 
-function filterAgainstQ<M extends BaseModel>(model: M, query: Query<M>): boolean {
-	return Object.entries(query).every(([key, expression]) => {
-		if (key === '$and' && Array.isArray(expression))
-			return expression.every((q: FieldsIRQL<M>) => filterAgainstQ(model, q))
-		if (key === '$or' && Array.isArray(expression))
-			return expression.some((q: FieldsIRQL<M>) => filterAgainstQ(model, q))
-		if (expression)
-			return isMatch(model, key, expression)
-		return $eq(model[key], expression)
-	})
+function _isMatch<M extends BaseModel>(model: M, query: Query<M>, value: any): boolean {
+	return Object.entries(query).every(([key, expression]) => evalExp(model, value, key, expression))
 }
 
-function filter<M extends BaseModel>(data: M[], query: Query<M>): M[] {
-	return data.filter(el => filterAgainstQ(el, query))
+function isMatch<M extends BaseModel>(model: M, query: Query<M>): boolean {
+	return Object.entries(query).every(([key, expression]) => evalExp(model, model[key], key, expression))
 }
 
 export function storeSearch<ModelType extends BaseModel>(data: ModelType[], query: Query<ModelType>): ModelType[] {
@@ -151,7 +131,7 @@ export function storeSearch<ModelType extends BaseModel>(data: ModelType[], quer
 	delete query.limit
 	delete query.$ordering
 	delete query.$select
-	data = filter(data, query)
+	data = data.filter(el => isMatch(el, query))
 	if ($ordering)
 		data = storeSort(data, $ordering)
 
