@@ -54,16 +54,16 @@ export abstract class BaseAuth {
 
 interface JWTOptions {
 	path: string,
-	usersService: Service<any>
+	usersService: any
 	refreshPath?: string,
 	storage?: StorageInterface
 }
 
-export class JWTAuth extends BaseAuth {
+export class JWTAuth<User> extends BaseAuth {
 	path: string
 	refreshPath: string | undefined
 	storage: StorageInterface
-	usersService: Service<any>
+	usersService: Service<User>
 
 	constructor({path, refreshPath, usersService, storage}: JWTOptions) {
 		super()

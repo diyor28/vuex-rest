@@ -1,8 +1,8 @@
 {
   "type": "module",
   "name": "vuex-rql",
-  "version": "1.0.2",
-  "description": "Vuex rest api wrapper",
+  "version": "1.0.4",
+  "description": "Vuex rql api wrapper",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "keywords": [

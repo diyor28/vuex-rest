@@ -13,7 +13,7 @@ import {JWTAuth} from "vuex-rql";
 const baseUrl = <string>process.env.VUE_APP_API_ENDPOINT
 import app from 'vuex-rql'
 
-app.configureAxios(baseUrl).configureAuth(JWTAuth({
+app.configureAxios(baseUrl).configureAuth(new JWTAuth({
     path: baseUrl + '/authentication/',
     refreshPath: baseUrl + '/authentication/refresh/',
     storage: localStorage
