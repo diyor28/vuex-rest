@@ -1,4 +1,4 @@
-import {AuthTokens, LoginCredentials} from "./auth";
+import {AuthResponse, LoginCredentials} from "./auth";
 import {BaseModel, Query} from "js-rql";
 
 export type Pk = string | number
@@ -41,4 +41,4 @@ export type ActionCreate<Model extends BaseModel> = (data: Partial<Model>) => Pr
 export type ActionPatch<Model extends BaseModel> = ([id, data]: [Pk, Partial<Model>]) => Promise<Model>
 export type ActionRemove<Model extends BaseModel> = (id: Pk) => Promise<undefined>
 export type ActionRefresh = () => Promise<string>
-export type ActionLogin = ({email, password}: LoginCredentials) => Promise<AuthTokens>
+export type ActionLogin = ({email, password}: LoginCredentials) => Promise<AuthResponse>

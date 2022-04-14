@@ -1,9 +1,9 @@
 import BaseAuthService from "./auth";
+import app from './app'
 
-export {LoginCredentials} from './auth'
-export {setStorage, $storage, StorageInterface} from './storage'
+export {LoginCredentials, JWTAuth} from './auth'
 export {BaseService, Service} from "./service";
-export {Query} from 'js-rql'
+export {Query, BaseModel} from 'js-rql'
 export {
 	FindResponse,
 	Pk,
@@ -30,12 +30,9 @@ export {
 } from './types'
 export {strip} from './utils'
 export {
-	$axios,
-	initializeAxiosInstance,
 	getAxiosConfig,
 	getAuthHeader,
-	requestInterceptor,
-	setAxiosInstance
+	requestInterceptor
 } from './axios'
 export {BaseAuthService}
-export {BaseModel} from 'js-rql'
+export default app;

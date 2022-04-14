@@ -1,14 +1,13 @@
-import axios, {AxiosInstance, AxiosRequestConfig} from "axios";
+import {AxiosRequestConfig} from "axios";
+import app from './app'
 import rql from "js-rql";
-import {$storage} from "./storage";
-
-let $axios: AxiosInstance
+import {JWTAuth} from "./auth";
 
 export function getAuthHeader(): { Authorization: string } | {} {
-	const accessToken = $storage.getItem("access-token")
-	if (!accessToken)
-		return {}
-	return {"Authorization": "Bearer " + accessToken};
+	if (app.authStrategy instanceof JWTAuth) {
+		return {"Authorization": "Bearer " + app.authStrategy.accessToken}
+	}
+	return {};
 }
 
 export function getAxiosConfig(baseUrl: string): AxiosRequestConfig {
@@ -24,15 +23,3 @@ export function requestInterceptor(config: AxiosRequestConfig) {
 	config.headers = {...config.headers, ...getAuthHeader()}
 	return config
 }
-
-export function initializeAxiosInstance(baseUrl: string, config?: AxiosRequestConfig) {
-	$axios = axios.create({...getAxiosConfig(baseUrl), ...config})
-	$axios.interceptors.request.use(requestInterceptor);
-	return $axios
-}
-
-export function setAxiosInstance(axios: AxiosInstance) {
-	$axios = axios
-}
-
-export {$axios}

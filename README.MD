@@ -7,16 +7,17 @@ using [RQL](https://connect.cloudblue.com/community/developers/api/rql/).
 
 Place the following code in your `store/index.ts`
 
-```javascript
-const baseUrl = process.env.VUE_APP_API_ENDPOINT
-initializeAxiosInstance(baseUrl)
-```
-
-Or in typescript
-
 ```typescript
+import {JWTAuth} from "vuex-rql";
+
 const baseUrl = <string>process.env.VUE_APP_API_ENDPOINT
-initializeAxiosInstance(baseUrl)
+import app from 'vuex-rql'
+
+app.configureAxios(baseUrl).configureAuth(JWTAuth({
+    path: baseUrl + '/authentication/',
+    refreshPath: baseUrl + '/authentication/refresh/',
+    storage: localStorage
+}))
 ```
 
 ## Usage
@@ -51,8 +52,6 @@ import {Module} from "vuex-module-decorators";
 
 @Module({name: 'auth', namespaced: true})
 export default class AuthService extends BaseAuthService<User> {
-	path = 'authentication/';
-	usersService = 'users';
 }
 ```
 
