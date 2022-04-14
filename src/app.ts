@@ -18,6 +18,7 @@ export class App {
 
 	configureAuth(authStrategy: BaseAuth) {
 		this.authStrategy = authStrategy
+		this.authStrategy.setAxiosInstance(this.axios)
 		return this
 	}
 
