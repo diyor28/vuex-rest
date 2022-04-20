@@ -108,7 +108,7 @@ export class JWTAuth<User> extends BaseAuth {
 			throw new Error(`No 'refreshPath' was provided`)
 		if (!accessToken)
 			throw new NoAccessToken()
-		return await this.axios.post(this.refreshPath, {access: accessToken})
+		return await this.axios.post(this.refreshPath, {access: accessToken}, {baseURL: '/'})
 			.then((response: AxiosResponse<{ access: string }>) => response.data)
 			.then(data => {
 				this.storage.setItem('access-token', data.access)

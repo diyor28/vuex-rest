@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex, {Store} from "vuex";
-import {Service, setAxiosInstance} from '../src';
+import app, {Service} from '../src';
 import {BaseModel} from "js-rql";
 import {getModule, Module} from "vuex-module-decorators";
 import {expect} from 'chai';
@@ -19,42 +19,45 @@ class TestService extends Service<TestModel> {
 }
 
 describe('Store search', function () {
-	const data = {
-		offset: 0,
-		limit: 10,
-		total: 3,
-		results: [
-			{
-				id: '1',
-				name: 'Name1',
-				age: 19,
-				date: '2022-04-06T00:00:00.000Z'
-			},
-			{
-				id: '2',
-				name: 'Name2',
-				age: 22,
-				date: '2022-04-07T00:00:00.000Z'
-			},
-			{
-				id: '3',
-				name: 'Name3',
-				age: 28,
-				date: '2022-04-08T00:00:00.000Z'
+	let testService: TestService;
+	beforeEach(() => {
+		const data = {
+			offset: 0,
+			limit: 10,
+			total: 3,
+			results: [
+				{
+					id: '1',
+					name: 'Name1',
+					age: 19,
+					date: '2022-04-06T00:00:00.000Z'
+				},
+				{
+					id: '2',
+					name: 'Name2',
+					age: 22,
+					date: '2022-04-07T00:00:00.000Z'
+				},
+				{
+					id: '3',
+					name: 'Name3',
+					age: 28,
+					date: '2022-04-08T00:00:00.000Z'
+				}
+			]
+		}
+		app.setAxiosInstance(<any>{
+			async get() {
+				return {data}
 			}
-		]
-	}
-	setAxiosInstance(<any>{
-		async get() {
-			return {data}
-		}
+		})
+		const store = new Store({
+			modules: {
+				test: TestService
+			}
+		})
+		testService = getModule(TestService, store)
 	})
-	const store = new Store({
-		modules: {
-			test: TestService
-		}
-	})
-	const testService = getModule(TestService, store)
 
 	it('Store search key:value', async () => {
 		await testService.find()
@@ -310,10 +313,12 @@ describe('Store search', function () {
 
 	it('Store search $or', async () => {
 		await testService.find()
-		const data = testService.findStore({$or: [
+		const data = testService.findStore({
+			$or: [
 				{age: 19},
 				{name: 'Name2'}
-			]})
+			]
+		})
 		expect(data, 'sorted result').deep.equal({
 			total: 2,
 			offset: 0,

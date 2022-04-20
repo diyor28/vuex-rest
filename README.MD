@@ -14,13 +14,14 @@ const baseUrl = <string>process.env.VUE_APP_API_ENDPOINT
 import app from 'vuex-rql'
 
 app.configureAxios(baseUrl).configureAuth(new JWTAuth({
-    path: baseUrl + '/authentication/',
-    refreshPath: baseUrl + '/authentication/refresh/',
-    storage: localStorage
+	path: baseUrl + '/authentication/',
+	refreshPath: baseUrl + '/authentication/refresh/',
+	storage: localStorage
 }))
 ```
 
 ## Usage
+
 Create the users service
 
 ```typescript
@@ -79,6 +80,7 @@ You can now import it in your vue component and use in the following fashion
 
 ```typescript
 import {usersService} from '@/store'
+
 usersService.find().then(data => {
 	// do stuff
 })
@@ -86,64 +88,109 @@ usersService.find().then(data => {
 const data = usersService.findStore({}).results // acess data from store
 ```
 
+## Extending to include custom code
+
+```typescript
+import app, {FindResponse} from "vuex-rql";
+
+@Module({name: 'users', namespaced: true})
+class CustomService extends Service<CustomType> {
+	path = 'users/'
+
+	@Action({rawError: true})
+	async find(query?: Query<CustomType>): Promise<FindResponse<ModelType>> {
+		let params: Query<CustomType> = Object.assign({}, query || {})
+		this.context.commit('setFindState', true)
+		return app.axios.get(this.path, {params}).then((response: AxiosResponse<FindResponse<ModelType>>) => {
+			this.context.commit('setData', response.data)
+			return response.data
+		}).catch(e => {
+			return Promise.reject(e)
+		}).finally(() => {
+			this.context.commit('setFindState', false)
+		})
+	}
+}
+```
+
 ## Querying
 
 ## $eq
 
-Find users with name John: 
+Find users with name John:
+
 ```typescript
 usersService.findStore({name: 'John'})
 ```
+
 or
+
 ```typescript
 usersService.findStore({name: {$eq: 'John'}})
 ```
 
 ## $gt, $lt, $le, $ge
+
 Find users between ages 18 and 65 inclusive
 
 ```typescript
 usersService.findStore({age: {$ge: 18, $le: 65}})
 ```
+
 or exclusive
+
 ```typescript
 usersService.findStore({age: {$gt: 18, $lt: 65}})
 ```
 
 ## $select
+
 Return specific fields
+
 ```typescript
 usersService.findStore({$select: ['name', 'age']})
 ```
 
 ## $like
+
 Search for users with name John
+
 ```typescript
 usersService.findStore({name: {$like: 'John'}})
 ```
 
 ## $ilike
+
 Search for users with name John (case in-sensitive):
+
 ```typescript
 usersService.findStore({name: {$ilike: 'john'}})
 ```
 
 ## $in, $out
+
 Search for users where the property does ($in) or does not ($out) match any of the given values:
+
 ```typescript
 usersService.findStore({roleId: {$in: [2, 5]}})
 ```
+
 or
+
 ```typescript
 usersService.findStore({roleId: {$out: [2, 5]}})
 ```
 
 ## $or
+
 Combine multiple queries using logical `OR`
+
 ```typescript
-usersService.findStore({$or: [
-        {age: {$gt: 18, $lt: 65}},
-        {active: {$eq: true}}
-    ]})
+usersService.findStore({
+	$or: [
+		{age: {$gt: 18, $lt: 65}},
+		{active: {$eq: true}}
+	]
+})
 ```
 
